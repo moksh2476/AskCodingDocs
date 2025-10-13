@@ -11,25 +11,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout your repository
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Step 2: Set up Docker Buildx (better caching & multi-platform)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Step 3: Build the Docker image
       - name: Build image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: false
           tags: genai-docs-qa:ci
+          load: true                 # <-- ensures docker run can see the image
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Step 4: Run container with environment variables
       - name: Run container (detached)
         run: |
           docker run -d --rm \
@@ -40,7 +37,6 @@ jobs:
             -e EMBEDDING_MODEL='text-embedding-3-small' \
             --name genai-ci genai-docs-qa:ci
 
-      # Step 5: Wait for the FastAPI app to be ready
       - name: Wait for app to be ready
         shell: bash
         run: |
@@ -55,27 +51,16 @@ jobs:
           docker logs genai-ci || true
           exit 1
 
-      # Step 6: Smoke test root endpoint
       - name: "Smoke test: GET /"
         run: curl -fsS http://localhost:8000/
 
-      # Step 7: Smoke test token endpoint
       - name: "Smoke test: POST /token"
         run: curl -fsS -X POST http://localhost:8000/token
 
-      # Optional: test /ask endpoint (will cost a small OpenAI API call)
-      # - name: "Smoke test: POST /ask"
-      #   run: |
-      #     TOKEN=$(curl -s -X POST http://localhost:8000/token | jq -r .access_token)
-      #     curl -fsS -X POST "http://localhost:8000/ask?query=What%20is%20FastAPI%3F" \
-      #       -H "Authorization: Bearer $TOKEN"
-
-      # Step 8: Show logs on failure
       - name: Show logs on failure
         if: failure()
         run: docker logs genai-ci || true
 
-      # Step 9: Stop the container no matter what
       - name: Stop container
         if: always()
         run: docker stop genai-ci || true
