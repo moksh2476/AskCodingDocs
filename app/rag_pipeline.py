@@ -1,13 +1,19 @@
-from langchain.vectorstores import FAISS
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.document_loaders import DirectoryLoader, TextLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.chains import RetrievalQA
-from langchain.chat_models import ChatOpenAI
-from app.config import OPENAI_API_KEY, DOCS_PATH, EMBEDDING_MODEL
+from langchain_community.vectorstores import FAISS
+from langchain_community.document_loaders import DirectoryLoader, TextLoader
+from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import OpenAIEmbeddings
 import os
+from dotenv import load_dotenv
 
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+load_dotenv()
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+DOCS_PATH = os.getenv("DOCS_PATH")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")
+
+print(f"Debug {DOCS_PATH}")
 
 def build_vectorstore():
     loader = DirectoryLoader(DOCS_PATH, glob="**/*.txt", loader_cls=TextLoader)
