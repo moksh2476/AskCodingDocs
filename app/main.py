@@ -1,11 +1,29 @@
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from app.auth import verify_token, create_access_token
 from app.rag_pipeline import get_qa_pipeline
 from app.url_to_txt import url_to_txt
 import os
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 app = FastAPI(title="Generative AI Docs Q&A API")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods including OPTIONS
+    allow_headers=["*"],
+)
+
+# Pydantic models for request bodies
+class UrlConvertRequest(BaseModel):
+    url: str
+
+class AskRequest(BaseModel):
+    query: str
 
 @app.get("/")
 def root():
@@ -17,17 +35,21 @@ def login():
     return {"access_token": create_access_token({"sub": "developer"}), "token_type": "bearer"}
 
 @app.post("/ask")
-def ask_question(query: str, user=Depends(verify_token)):
+def ask_question(request: AskRequest, user=Depends(verify_token)):
     qa = get_qa_pipeline()
-    response = qa.run(query)
+    response = qa.run(request.query)
     return {"answer": response}
 
 
 @app.post("/convert")
-def url_to_text(url: str, output_filename: str):
-    url_to_txt(url, output_filename)
+def url_to_text(request: UrlConvertRequest):
+    try:
+        result = url_to_txt(request.url, "docs")
+        return {"success": True, "message": f"URL converted successfully", "file_path": result}
+    except Exception as e:
+        return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
 
-DOCS_DIR = "data"  # same folder used in url_to_txt.py
+DOCS_DIR = "docs"  # same folder used in url_to_txt.py
 
 @app.get("/list-docs")
 def list_docs():

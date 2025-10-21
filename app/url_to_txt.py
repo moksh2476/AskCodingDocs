@@ -9,12 +9,21 @@ def url_to_txt(url: str, output_dir: str = "docs") -> str:
 
     Args:
         url (str): The webpage URL to scrape.
-        output_dir (str): Folder to save the text file in (default: 'data').
+        output_dir (str): Folder to save the text file in (default: 'docs').
 
     Returns:
         str: Path to the saved text file.
     """
     try:
+        # Get the absolute path to ensure we save in the right location
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir)
+        full_output_dir = os.path.join(project_root, output_dir)
+    
+        
+        # Create output directory if it doesn't exist
+        os.makedirs(full_output_dir, exist_ok=True)
+        
         # Fetch the webpage
         response = requests.get(url, timeout=15)
         response.raise_for_status()
@@ -33,7 +42,7 @@ def url_to_txt(url: str, output_dir: str = "docs") -> str:
         # Generate filename from URL
         domain = urlparse(url).netloc.replace(".", "_")
         filename = f"{domain}.txt"
-        output_path = os.path.join(output_dir, filename)
+        output_path = os.path.join(full_output_dir, filename)
 
         # Save to file
         with open(output_path, "w", encoding="utf-8") as f:
