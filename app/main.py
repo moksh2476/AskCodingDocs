@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from app.auth import verify_token, create_access_token
 from app.rag_pipeline import get_qa_pipeline
-from url_to_text import url_to_txt
+from app.url_to_txt import url_to_txt
 import os
 from fastapi.responses import JSONResponse
 

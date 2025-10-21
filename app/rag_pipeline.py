@@ -1,9 +1,9 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.chains import RetrievalQA
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_community.chat_models import ChatOpenAI
 from langchain_openai import OpenAIEmbeddings
+from langchain.chains import RetrievalQA
 import os
 from dotenv import load_dotenv
 
